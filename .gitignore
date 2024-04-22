@@ -1,0 +1,6 @@
+.DS_Store
+*.pyc
+.env
+!data/pneumothorax/
+!data/pneumothorax/train-rle.csv
+!data/train-rle.csv
