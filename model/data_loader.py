@@ -48,4 +48,5 @@ class PneumothoraxDataset(Dataset):
         else:
             mask_path = os.path.join(self.mask_dir, img_id + "_mask.png")
             mask = read_image(mask_path, ImageReadMode.GRAY).float()
+            mask = mask / 255.0
             return img, mask
