@@ -308,8 +308,8 @@ for i in range(epoch+1, epoch+number_of_epochs+1):
 
     train_iou_scores.append((i, train_logs['iou_score']))
     val_iou_scores.append((i, valid_logs['iou_score']))
-    val_dice_loss.append((i, valid_logs['dice_loss']))
-    train_dice_loss.append((i,train_logs['dice_loss']))
+    val_dice_loss.append((i, valid_logs['dice_loss + bce_loss']))
+    train_dice_loss.append((i,train_logs['dice_loss + bce_loss']))
     
     started_lr = optimizer.param_groups[0]['lr']
     print("Started with LR:",started_lr)
@@ -327,8 +327,8 @@ for i in range(epoch+1, epoch+number_of_epochs+1):
         'optimizer_state_dict': optimizer.state_dict(),
         'loss_function': loss,
         'max_score': max_score,
-        'val_loss': valid_logs['dice_loss'],
-        'train_loss': train_logs['dice_loss'],
+        'val_loss': valid_logs['dice_loss + bce_loss'],
+        'train_loss': train_logs['dice_loss + bce_loss'],
         'train_iou': train_logs['iou_score'],
         'val_iou': valid_logs['iou_score'],
         'scheduler_state_dict': scheduler.state_dict(),
@@ -351,8 +351,8 @@ for i in range(epoch+1, epoch+number_of_epochs+1):
     wandb.log({
         'epoch': i,
         'max_score': max_score,
-        'val_loss': valid_logs['dice_loss'],
-        'train_loss': train_logs['dice_loss'],
+        'val_loss': valid_logs['dice_loss + bce_loss'],
+        'train_loss': train_logs['dice_loss + bce_loss'],
         'train_iou': train_logs['iou_score'],
         'val_iou': valid_logs['iou_score'],
         'started_lr': started_lr
