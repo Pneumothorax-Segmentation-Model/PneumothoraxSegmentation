@@ -26,13 +26,14 @@ up = 48
 
 
 def main():
-    pool_obj = multiprocessing.Pool(24)
+    test_model(22)
+    # pool_obj = multiprocessing.Pool(24)
 
-    pool_obj.map(test_model, range(low, up + 1))
+    # pool_obj.map(test_model, range(low, up + 1))
 
-    pool_obj.close()
+    # pool_obj.close()
 
-    print("All Done!")
+    # print("All Done!")
 
 
 def test_model(idx):
@@ -258,20 +259,24 @@ def pred_to_csv(test_dir, dest_dir, model_path, model_number):
         predicted_mask = model.predict(image_tensor)
         pr_mask = predicted_mask.squeeze().cpu().numpy().round()
 
-        pr_mask_1024 = resize(1024)(image=image_array_512, mask=pr_mask)["mask"]
+        pr_mask_1024 = resize_up(1024)(image=image_array_512, mask=pr_mask)["mask"]
 
         pr_rle = mask2rle(pr_mask_1024, 1024, 1024)
         new_row = {"ImageId": image.split(".")[0], "EncodedPixels": pr_rle}
         meta_df = meta_df._append(new_row, ignore_index=True)
 
     # tstamp = pd.Timestamp.now().strftime("%Y-%m-%d-%H-%M")
-    meta_df.to_csv(f"{dest_dir}/U-E-B4_{model_number}_final-rle.csv", index=False)
+    meta_df.to_csv(f"{dest_dir}/inter_cubic_{model_number}_final-rle.csv", index=False)
 
     print("Success!")
 
 
 def resize(num):
     return Compose([Resize(width=num, height=num, interpolation=cv2.INTER_AREA)])
+
+
+def resize_up(num):
+    return Compose([Resize(width=num, height=num, interpolation=cv2.INTER_CUBIC)])
 
 
 def mask2rle(img, width, height):
