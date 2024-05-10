@@ -3,7 +3,6 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
@@ -12,16 +11,30 @@ import segmentation_models_pytorch as smp
 from segmentation_models_pytorch import utils
 from segmentation_models_pytorch.utils.base import Loss
 import pydicom
+from tqdm import tqdm
+import multiprocessing
 
 
 ## General Definitions
 
-def main(test_dir,dest_dir,model_path,low,up):
-    for i in range(low,up+1):
-        print(f"Model of Epoch {i}:")
-        pred_to_csv(test_dir,dest_dir,model_path,i)
+test_dir = "../../test_data"
+dest_dir = "../../test_results"
+model_path = "../../artifacts"
+low = 0
+up = 48
+
+def main():
+    pool_obj = multiprocessing.Pool(16)
+
+    pool_obj.map(test_model,range(low,up+1))
+
+    pool_obj.close()
     
     print("All Done!")
+
+def test_model(idx):
+    print(f"Model of Epoch {idx}:")
+    pred_to_csv(test_dir,dest_dir,model_path,idx)
 
 class Dataset(BaseDataset):
 
@@ -171,9 +184,8 @@ def pred_to_csv(test_dir,dest_dir,model_path,model_number):
 
     meta_df=pd.DataFrame(columns=["ImageId","EncodedPixels"])
 
-    count=0
     images=[f for f in os.listdir(test_dir) if not f.startswith('.')]
-    for image in images:
+    for image in tqdm(images):
         ds=pydicom.dcmread(os.path.join(test_dir,image))
         image_array=cv2.cvtColor(ds.pixel_array,cv2.COLOR_GRAY2RGB)
         image_array_512=resize(512)(image=image_array)['image']
@@ -191,9 +203,6 @@ def pred_to_csv(test_dir,dest_dir,model_path,model_number):
         pr_rle=mask2rle(pr_mask_1024,1024,1024)
         new_row = {"ImageId":image.split('.')[0],"EncodedPixels":pr_rle}
         meta_df = meta_df._append(new_row, ignore_index=True)
-        count+=1
-        if count%500:
-            print(f"{count} Images Done!")
     
     # tstamp = pd.Timestamp.now().strftime("%Y-%m-%d-%H-%M")
     meta_df.to_csv(f'{dest_dir}/U-E-B4_{model_number}_final-rle.csv',index=False)
@@ -230,5 +239,5 @@ def mask2rle(img, width, height):
             currentPixel+=1
     return " ".join(rle) if len(rle) else "-1"
 
-
-main()
+if __name__ == "__main__":
+    main()
