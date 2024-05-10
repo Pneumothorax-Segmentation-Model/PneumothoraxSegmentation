@@ -14,7 +14,7 @@ from segmentation_models_pytorch import utils
 from segmentation_models_pytorch.utils.base import Loss
 import wandb
 
-resume = 0
+resume = 1
 number_of_epochs = 10
 
 encoder_name = "se_resnext101_32x4d"
@@ -282,7 +282,7 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
 
 
 if resume:
-    checkpoint = torch.load("latest_model.pth")
+    checkpoint = torch.load("latest_model_cosine.pth")
     model.load_state_dict(checkpoint["model_state_dict"])
     optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
     scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
@@ -294,6 +294,7 @@ if resume:
     train_iou = checkpoint["train_iou"]
     val_iou = checkpoint["val_iou"]
     started_lr = checkpoint["started_lr"]
+    scheduler.best = max_score
 
 
 print("Scheduler State Dict Outside: ", scheduler.state_dict())
@@ -370,7 +371,7 @@ for i in range(epoch + 1, epoch + number_of_epochs + 1):
 
     started_lr = optimizer.param_groups[0]["lr"]
     print("Started with LR:", started_lr)
-    scheduler.step(train_logs["iou_score"])
+    scheduler.step(valid_logs["iou_score"])
     print("Changed LR to:", optimizer.param_groups[0]["lr"])
     starting_lrs.append((i, started_lr))
 
